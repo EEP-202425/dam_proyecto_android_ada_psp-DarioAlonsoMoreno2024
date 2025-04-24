@@ -1,24 +1,26 @@
 package com.proyectofinal.dominio;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Producto {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
-	
+
 	private int precio;
 	private String model;
 	private int year;
-	
-    @Column(name = "user_id")
-    private Long userId;
+
+	@ManyToOne
+	@JoinColumn(name = "user_id", nullable = false) // Asegúrate de que este campo no sea nulo
+	private Usuario usuario;
 
 	public long getId() {
 		return id;
@@ -52,15 +54,5 @@ public class Producto {
 		this.year = year;
 	}
 
-	public Long getUserId() {
-		return userId;
-	}
-
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
-    
-    
-    
 
 }

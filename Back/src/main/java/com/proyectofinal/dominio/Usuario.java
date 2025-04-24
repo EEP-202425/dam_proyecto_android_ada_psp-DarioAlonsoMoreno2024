@@ -28,16 +28,20 @@ public class Usuario {
     @Column(name = "edad")
     private int edad;
 
+	private String password;
+  
+
     // Constructor vacío (necesario para Hibernate)
     public Usuario() {
     }
 
     // Constructor con parámetros
-    public Usuario(String name, String lastName, String email, int edad) {
+    public Usuario(String name, String lastName, String email, int edad, String password) {
         this.name = name;
         this.lastName = lastName;
         this.email = email;
         this.edad = edad;
+        this.password = password;
     }
 
     // Getters y Setters
@@ -80,6 +84,14 @@ public class Usuario {
 
 	public void setEdad(int edad) {
 		this.edad = edad;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
     
 }
