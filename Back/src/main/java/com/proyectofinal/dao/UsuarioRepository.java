@@ -10,7 +10,7 @@ import com.proyectofinal.dominio.Usuario;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long>{
-	Optional<Usuario> findByEMail(String email);
+	Optional<Usuario> findByEmail(String email);
 	
 
 }
