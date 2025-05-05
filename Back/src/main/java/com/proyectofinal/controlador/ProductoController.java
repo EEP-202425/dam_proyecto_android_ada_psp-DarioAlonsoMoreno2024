@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectofinal.dominio.Producto;
+import com.proyectofinal.dto.ProductoConStockDTO;
 import com.proyectofinal.services.ProductoService;
 
 @RestController
@@ -22,6 +24,14 @@ public class ProductoController {
 	
 	@Autowired
 	private ProductoService service;
+	
+	@Autowired
+	private ProductoService productoService;
+	
+	@GetMapping("/stock")
+	public ResponseEntity<List<ProductoConStockDTO>> obtenerProductosConStock() {
+	    return ResponseEntity.ok(productoService.obtenerProductosConStock());
+	}
 	
 	 @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	    public Producto crear(@RequestBody Producto producto) {
