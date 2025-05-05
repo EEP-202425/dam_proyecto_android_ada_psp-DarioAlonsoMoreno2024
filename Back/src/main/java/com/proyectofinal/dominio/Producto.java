@@ -15,7 +15,7 @@ public class Producto {
 	private long id;
 
 	private int precio;
-	private String model;
+	private String nombre;
 	private int year;
 
 	@ManyToOne
@@ -38,12 +38,12 @@ public class Producto {
 		this.precio = precio;
 	}
 
-	public String getModel() {
-		return model;
+	public String getNombre() {
+		return nombre;
 	}
 
-	public void setModel(String model) {
-		this.model = model;
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
 	}
 
 	public int getYear() {
