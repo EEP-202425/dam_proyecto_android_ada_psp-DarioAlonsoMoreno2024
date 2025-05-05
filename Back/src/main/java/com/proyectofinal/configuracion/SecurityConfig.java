@@ -2,6 +2,7 @@ package com.proyectofinal.configuracion;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,11 +21,36 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.csrf().disable().authorizeHttpRequests().requestMatchers("/api/usuarios/login", "/api/usuarios/registro")
-				.permitAll().anyRequest().authenticated();
+		http.csrf(csrf -> csrf.disable()) // Desactiva CSRF
+				.authorizeHttpRequests(auth -> auth
+						// .requestMatchers("/h2-console/**").permitAll() // Permitir acceso a H2
+						// Console
+						.requestMatchers(HttpMethod.POST, "/api/**").permitAll() // Permitir registro de usuario
+						.requestMatchers(HttpMethod.POST, "/api/**").permitAll() // Permitir login
+						.requestMatchers(HttpMethod.POST, "/api/**").permitAll() // Permitir login
+						.requestMatchers(HttpMethod.GET, "/api/**").permitAll() // Permitir acceso a usuarios
+						.anyRequest().authenticated() // Cualquier otra solicitud requiere autenticación
+				).headers(headers -> headers.frameOptions(frame -> frame.disable()) // Permitir el uso de frames
+																					// (necesario para H2)
+				);
 
 		return http.build();
 	}
+	
+//	   @Bean
+//	    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//	        http
+//	            .csrf(csrf -> csrf.disable()) // Desactiva protección CSRF (necesario para Postman y apps móviles)
+//	            .authorizeHttpRequests(auth -> auth
+//	                .requestMatchers("/api/usuarios/**").permitAll()
+//	                .requestMatchers("/api/inventario/**").permitAll()
+//	                .requestMatchers("/api/pedidos/**").permitAll()
+//	                .anyRequest().authenticated()
+//	            )
+//	            .headers(headers -> headers.frameOptions(frame -> frame.disable())); // Para H2 si lo usas
+//
+//	        return http.build();
+//	    }
 
 	@Bean
 	public AuthenticationManager authManager(HttpSecurity http) throws Exception {
