@@ -15,5 +15,4 @@ public class SQLiteDialect extends Dialect {
         return false;
     }
 
-    // Puedes añadir más configuraciones necesarias si usas JPA
 }
