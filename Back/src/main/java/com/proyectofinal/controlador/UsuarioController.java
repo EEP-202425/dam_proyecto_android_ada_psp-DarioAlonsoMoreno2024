@@ -41,6 +41,7 @@
 package com.proyectofinal.controlador;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +51,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectofinal.dominio.Usuario;
+import com.proyectofinal.dto.LoginResponse;
 import com.proyectofinal.dto.UserDTO;
 import com.proyectofinal.services.UsuarioService;
 
@@ -61,10 +63,15 @@ public class UsuarioController {
     private UsuarioService usuarioService;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserDTO usuarioDTO) {
-        Optional<Usuario> usuario = usuarioService.login(usuarioDTO.getEmail(), usuarioDTO.getPassword());
-        return usuario.map(u -> ResponseEntity.ok("Bienvenido, " + u.getName()))
-                      .orElse(ResponseEntity.status(401).body("Credenciales inválidas"));
+    public ResponseEntity<LoginResponse> login(@RequestBody UserDTO usuarioDTO) {
+        return usuarioService.login(usuarioDTO.getEmail(), usuarioDTO.getPassword())
+          .map(u -> {
+            // Genera un token; aquí un UUID de ejemplo
+            String token = UUID.randomUUID().toString();
+            return ResponseEntity
+                     .ok(new LoginResponse(token, u.getId()));
+          })
+          .orElse(ResponseEntity.status(401).build());
     }
 
     @PostMapping("/registro")
