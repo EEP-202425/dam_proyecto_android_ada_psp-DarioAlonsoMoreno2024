@@ -1,10 +1,11 @@
-package com.example.repuestosalonso.model
+package com.repuestosalonso.model
+
+import com.google.gson.annotations.SerializedName
 
 data class Repuesto(
-    val id: Int,
-    val nombre: String,
-    val descripcion: String,
-    val precio: Double,
-    val disponible: Boolean,
-    val imagen: String?
+    @SerializedName("id")    val id: Long,
+    @SerializedName("userId")val userId: Long,    // si el JSON usa userId
+    @SerializedName("precio")val precio: Double,
+    @SerializedName("model") val model: String,
+    @SerializedName("year")  val year: Int
 )
