@@ -1,8 +1,15 @@
-package com.example.repuestosalonso.model
+package com.repuestosalonso.model
+
+import com.google.gson.annotations.SerializedName
 
 data class LoginResponse(
-    val success: Boolean,
-    val message: String,
-    val token: String?,
-    val usuario: Usuario?
+    @SerializedName("token") val token: String,
+    @SerializedName("userId") val userId: Long,
 )
+
+//    val success: Boolean,
+//    val message: String,
+//    val token: String?,
+//    val usuario: Usuario?
+
+
