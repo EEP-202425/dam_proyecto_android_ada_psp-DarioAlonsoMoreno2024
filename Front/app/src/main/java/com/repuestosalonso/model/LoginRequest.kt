@@ -1,6 +1,6 @@
-package com.example.repuestosalonso.model
+package com.repuestosalonso.model
 
 data class LoginRequest(
-    val username: String,
+    val email: String,
     val password: String
 )
