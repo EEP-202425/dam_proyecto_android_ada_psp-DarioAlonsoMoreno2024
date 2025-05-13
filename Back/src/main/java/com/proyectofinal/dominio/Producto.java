@@ -17,12 +17,20 @@ public class Producto {
 	private String nombre; // <-- ahora String
 	private double precio;
 	private int year;
+	
+    public Producto(String nombre, double precio, int year, Usuario usuario) {
+        this.nombre  = nombre;
+        this.precio  = precio;
+        this.year    = year;
+        this.usuario = usuario;
+    }
+    
+    public Producto() {}
 
 	@ManyToOne
 	@JoinColumn(name = "user_id", nullable = false)
 	private Usuario usuario;
 
-	// Getters / setters
 
 	public long getId() {
 		return id;
