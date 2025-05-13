@@ -1,38 +1,55 @@
 package com.repuestosalonso.viewmodel
 
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.repuestosalonso.data.RepuestosRepository
 import com.repuestosalonso.model.Repuesto
+import com.repuestosalonso.model.PedidoResponse
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Response
 
-// Reutilizamos UiListState de antes
-sealed class UiListState {
-    object Loading                       : UiListState()
-    data class Success(val data: List<Repuesto>) : UiListState()
-    data class Error(val message: String)        : UiListState()
-}
-
 class RepuestosViewModel(
-    private val repo: RepuestosRepository
+    private val repository: RepuestosRepository
 ) : ViewModel() {
-    private val _state = MutableLiveData<UiListState>(UiListState.Loading)
-    val state: LiveData<UiListState> = _state
 
+    private val _repuestos = MutableStateFlow<List<Repuesto>>(emptyList())
+    val repuestos: StateFlow<List<Repuesto>> = _repuestos
+
+    /** Carga inicial o recarga de repuestos */
     fun loadRepuestos(token: String) {
-        _state.value = UiListState.Loading
         viewModelScope.launch {
-            try {
-                val resp: Response<List<Repuesto>> = repo.fetchRepuestos(token)
-                if (resp.isSuccessful) {
-                    resp.body()?.let { _state.value = UiListState.Success(it) }
-                        ?: run { _state.value = UiListState.Error("Respuesta vacía") }
-                } else {
-                    _state.value = UiListState.Error("Error HTTP ${resp.code()}")
-                }
-            } catch (e: Exception) {
-                _state.value = UiListState.Error(e.localizedMessage ?: "Error desconocido")
+            val response: Response<List<Repuesto>> = repository.fetchRepuestos(token)
+            if (response.isSuccessful) response.body()?.let { lista ->
+                _repuestos.value = lista
             }
         }
+    }
+
+    /** Crear un nuevo repuesto y añadirlo a la lista */
+    suspend fun createRepuesto(
+        token: String,
+        userId: Long,
+        nombre: String,
+        precio: Double,
+        year: Int
+    ): Response<Repuesto> {
+        val response = repository.addRepuesto(token, userId, nombre, precio, year)
+        if (response.isSuccessful) response.body()?.let { nuevo ->
+            val updated = _repuestos.value.toMutableList().apply { add(0, nuevo) }
+            _repuestos.value = updated
+        }
+        return response
+    }
+
+    /** Crear un pedido de repuesto */
+    suspend fun createOrder(
+        token: String,
+        userId: Long,
+        productId: Long,
+        cantidad: Int
+    ): Response<PedidoResponse> {
+        return repository.makeOrder(token, userId, productId, cantidad)
     }
 }

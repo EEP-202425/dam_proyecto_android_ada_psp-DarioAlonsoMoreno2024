@@ -2,8 +2,10 @@ package com.repuestosalonso.network
 
 import com.repuestosalonso.model.LoginRequest
 import com.repuestosalonso.model.LoginResponse
+import com.repuestosalonso.model.NewRepuestoRequest
 import com.repuestosalonso.model.Pedido
 import com.repuestosalonso.model.PedidoRequest
+import com.repuestosalonso.model.PedidoResponse
 import com.repuestosalonso.model.Repuesto
 import com.repuestosalonso.model.Usuario
 import retrofit2.Response
@@ -31,9 +33,16 @@ interface ApiService {
         @Header("Authorization") bearerToken: String
     ): Response<List<Repuesto>>
 
-    @POST("api/pedidos")
-    suspend fun crearPedido(
-        @Header("Authorization") bearerToken: String,
-        @Body pedido: PedidoRequest
-    ): Response<Pedido>
+    @POST("api/pedidos/crear")
+     suspend fun crearPedido(
+         @Header("Authorization") bearerToken: String,
+     @Body pedido: PedidoRequest
+     ): Response<PedidoResponse>
+
+    // Crear un nuevo repuesto
+    @POST("api/producto")
+    suspend fun crearRepuesto(
+        @Header("Authorization") bearer: String,
+        @Body request: NewRepuestoRequest
+    ): Response<Repuesto>
 }

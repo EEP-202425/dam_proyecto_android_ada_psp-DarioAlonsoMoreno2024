@@ -1,8 +1,9 @@
-// app/src/main/java/com/repuestosalonso/model/PedidoRequest.kt
 package com.repuestosalonso.model
 
 import com.google.gson.annotations.SerializedName
 
 data class PedidoRequest(
-    @SerializedName("productoId") val productoId: Long
+    @SerializedName("userId")  val userId: Long,
+    @SerializedName("productId") val productId: Long,
+    @SerializedName("count")   val count: Int
 )

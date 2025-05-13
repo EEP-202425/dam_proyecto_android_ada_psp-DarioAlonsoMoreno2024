@@ -5,5 +5,6 @@ data class ItemPedido(
     val repuestoId: Int,
     val cantidad: Int,
     val precioUnitario: Double,
-    val nombreRepuesto: String
+    val nombreRepuesto: String,
+    val userId: Long
 )

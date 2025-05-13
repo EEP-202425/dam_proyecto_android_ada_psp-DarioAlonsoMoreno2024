@@ -1,4 +1,4 @@
-package com.example.repuestosalonso.uii
+package com.repuestosalonso.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

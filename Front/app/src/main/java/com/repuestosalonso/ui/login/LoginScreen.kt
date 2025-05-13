@@ -15,7 +15,7 @@ import com.repuestosalonso.viewmodel.UiState
 @Composable
 fun LoginScreen(
     viewModel: UserViewModel,
-    onLoginSuccess: (token: String) -> Unit
+    onLoginSuccess: (token: String, userId: Long) -> Unit
 ) {
     // Empezamos en Idle para no mostrar spinner hasta que lancemos el login
     val state by viewModel.loginState.observeAsState(initial = UiState.Idle)
@@ -68,8 +68,8 @@ fun LoginScreen(
             is UiState.Success -> {
                 // Usamos 'state' como clave para que el efecto solo se dispare una vez por éxito
                 LaunchedEffect(state) {
-                    val loginResp = (state as UiState.Success).data as LoginResponse
-                    onLoginSuccess(loginResp.token)
+                    val resp = (state as UiState.Success).data as LoginResponse
+                    onLoginSuccess(resp.token, resp.userId)
                 }
             }
             UiState.Idle -> {
