@@ -78,6 +78,10 @@ public class UsuarioService {
 		return Optional.empty(); // Retorna vacío si las credenciales son inválidas
 	}
 
+	   public Optional<Usuario> findById(Long id) {
+	        return usuarioRepository.findById(id);
+	    }
+	
 	private boolean passwordMatches(String rawPassword, String encodedPassword) {
 		return passwordEncoder.matches(rawPassword, encodedPassword); // Compara la contraseña en texto plano con laencriptada
 																		
