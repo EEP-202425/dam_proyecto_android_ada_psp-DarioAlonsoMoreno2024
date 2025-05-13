@@ -52,4 +52,14 @@ class RepuestosViewModel(
     ): Response<PedidoResponse> {
         return repository.makeOrder(token, userId, productId, cantidad)
     }
+
+    fun deleteProduct(token: String, productId: Long) {
+        viewModelScope.launch {
+            val resp = repository.deleteProduct(token, productId)
+            if (resp.isSuccessful) {
+                // Filtramos la lista local para quitar el borrado
+                _repuestos.value = _repuestos.value.filterNot { it.id == productId }
+            }
+        }
+    }
 }

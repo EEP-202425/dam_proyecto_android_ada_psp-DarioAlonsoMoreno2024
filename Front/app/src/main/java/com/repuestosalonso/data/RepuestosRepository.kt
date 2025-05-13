@@ -15,6 +15,10 @@ class RepuestosRepository {
         return api.getRepuestos("Bearer $token")
     }
 
+    suspend fun deleteProduct(token: String, productId: Long): Response<Unit> {
+        return api.deleteProduct("Bearer $token", productId)
+    }
+
     suspend fun makeOrder(
         token: String,
         userId: Long,

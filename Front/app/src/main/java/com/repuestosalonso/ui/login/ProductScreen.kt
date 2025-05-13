@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,7 +38,6 @@ fun ProductsScreen(
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
-        // LazyColumn se encarga del scroll automático
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -47,24 +47,41 @@ fun ProductsScreen(
         ) {
             items(repuestos) { repuesto ->
                 Card(Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(4.dp)) {
-                    Column(Modifier.padding(8.dp)) {
-                        Text("Modelo: ${repuesto.model}", style = MaterialTheme.typography.titleMedium)
-                        Text("Precio: ${repuesto.precio}", style = MaterialTheme.typography.bodyMedium)
-                        Text("Año: ${repuesto.year}", style = MaterialTheme.typography.bodySmall)
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    val resp = viewModel.createOrder(token, userId, repuesto.id, 1)
-                                    if (resp.isSuccessful)
-                                        snackbarHostState.showSnackbar("Pedido enviado")
-                                    else
-                                        snackbarHostState.showSnackbar("Error al pedir: ${resp.code()}")
-                                }
-                            },
-                            Modifier.fillMaxWidth()
-                        ) {
-                            Text("Pedir")
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Modelo: ${repuesto.model}", style = MaterialTheme.typography.titleMedium)
+                            Text("Precio: ${repuesto.precio}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Año: ${repuesto.year}", style = MaterialTheme.typography.bodySmall)
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        val resp = viewModel.createOrder(token, userId, repuesto.id, 1)
+                                        val msg = if (resp.isSuccessful) "Pedido enviado" else "Error al pedir"
+                                        snackbarHostState.showSnackbar(msg)
+                                    }
+                                },
+                                Modifier.fillMaxWidth()
+                            ) {
+                                Text("Pedir")
+                            }
+                        }
+                        IconButton(onClick = {
+                            scope.launch {
+                                viewModel.deleteProduct(token, repuesto.id)
+                                snackbarHostState.showSnackbar("Repuesto eliminado")
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Borrar",
+                                tint = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }
@@ -72,3 +89,4 @@ fun ProductsScreen(
         }
     }
 }
+
