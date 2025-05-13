@@ -1,26 +1,22 @@
 package com.proyectofinal.dto;
 
 public class ProductoConStockDTO {
-    private String modelo;
-    private int precio;
+    private String nombre;
+    private double precio;
     private int stock;
 
-    public ProductoConStockDTO(String modelo, int precio, int stock) {
-        this.modelo = modelo;
+    public ProductoConStockDTO(String nombre, double precio, int stock) {
+        this.nombre = nombre;
         this.precio = precio;
-        this.stock = stock;
+        this.stock  = stock;
     }
 
-    // Getters
-    public String getModelo() {
-        return modelo;
-    }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
 
-    public int getPrecio() {
-        return precio;
-    }
+    public double getPrecio() { return precio; }
+    public void setPrecio(double precio) { this.precio = precio; }
 
-    public int getStock() {
-        return stock;
-    }
+    public int getStock() { return stock; }
+    public void setStock(int stock) { this.stock = stock; }
 }

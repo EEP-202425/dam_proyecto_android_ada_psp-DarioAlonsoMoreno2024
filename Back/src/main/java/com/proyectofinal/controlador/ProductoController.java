@@ -1,60 +1,129 @@
 package com.proyectofinal.controlador;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.proyectofinal.dominio.Producto;
+import com.proyectofinal.dominio.Usuario;
+import com.proyectofinal.dto.ProductoCreateDTO;
+import com.proyectofinal.dto.ProductoDTO;
 import com.proyectofinal.dto.ProductoConStockDTO;
 import com.proyectofinal.services.ProductoService;
+import com.proyectofinal.services.UsuarioService;
 
 @RestController
-@RequestMapping("api/producto")
+@RequestMapping("/api/producto")
 public class ProductoController {
-	
-	@Autowired
-	private ProductoService service;
-	
-	@Autowired
-	private ProductoService productoService;
-	
-	@GetMapping("/stock")
-	public ResponseEntity<List<ProductoConStockDTO>> obtenerProductosConStock() {
-	    return ResponseEntity.ok(productoService.obtenerProductosConStock());
-	}
-	
-	 @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	    public Producto crear(@RequestBody Producto producto) {
-	        return service.crearProducto(producto);
-	 }
-	 
-	  @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	    public Producto obtenerPorId(@PathVariable(value = "id") Long id) {
-	        return service.obtenerProducto(id);
-	    }
 
-	    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	    public List<Producto> obtenerTodos() {
-	        return service.obtenerTodosLosProductos();
-	    }
+    private final ProductoService productoService;
+    private final UsuarioService usuarioService;
 
-	    @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	    public Producto actualizar(@PathVariable(value = "id") Long id, @RequestBody Producto producto) {
-	        return service.actualizarProducto(producto, id);
-	    }
+    @Autowired
+    public ProductoController(ProductoService productoService,
+                              UsuarioService usuarioService) {
+        this.productoService = productoService;
+        this.usuarioService  = usuarioService;
+    }
 
-	    @DeleteMapping(path = "/{id}")
-	    public void eliminar(@PathVariable(value = "id") Long id) {
-	        service.eliminarProducto(id);
-	    }
+    @GetMapping(path = "/stock", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<ProductoConStockDTO> obtenerProductosConStock() {
+        return productoService.obtenerProductosConStock();
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<ProductoDTO> obtenerTodos() {
+        return productoService.obtenerTodosLosProductos().stream()
+            .map(p -> new ProductoDTO(
+                p.getId(),
+                p.getUsuario().getId(),
+                p.getPrecio(),
+                p.getNombre(),
+                p.getYear()
+            ))
+            .collect(Collectors.toList());
+    }
+
+    @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ProductoDTO obtenerPorId(@PathVariable Long id) {
+        Producto p = productoService.obtenerProducto(id);
+        return new ProductoDTO(
+            p.getId(),
+            p.getUsuario().getId(),
+            p.getPrecio(),
+            p.getNombre(),
+            p.getYear()
+        );
+    }
+
+    @PostMapping(
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ProductoDTO> crearProducto(@RequestBody ProductoCreateDTO dto) {
+        Usuario u = usuarioService.findById(dto.getUsuarioId())
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Usuario no existe")
+            );
+
+        Producto p = new Producto();
+        p.setNombre(dto.getNombre());
+        p.setPrecio(dto.getPrecio());
+        p.setYear(dto.getYear());
+        p.setUsuario(u);
+
+        Producto guardado = productoService.crearProducto(p);
+        ProductoDTO salida = new ProductoDTO(
+            guardado.getId(),
+            u.getId(),
+            guardado.getPrecio(),
+            guardado.getNombre(),
+            guardado.getYear()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(salida);
+    }
+
+    @PutMapping(
+        path = "/{id}",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ProductoDTO actualizarProducto(
+        @PathVariable Long id,
+        @RequestBody ProductoCreateDTO dto
+    ) {
+        Usuario u = usuarioService.findById(dto.getUsuarioId())
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Usuario no existe")
+            );
+
+        Producto p = new Producto();
+        p.setId(id);
+        p.setNombre(dto.getNombre());
+        p.setPrecio(dto.getPrecio());
+        p.setYear(dto.getYear());
+        p.setUsuario(u);
+
+        Producto actualizado = productoService.actualizarProducto(p, id);
+        return new ProductoDTO(
+            actualizado.getId(),
+            u.getId(),
+            actualizado.getPrecio(),
+            actualizado.getNombre(),
+            actualizado.getYear()
+        );
+    }
+
+    @DeleteMapping(path = "/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarProducto(@PathVariable Long id) {
+        productoService.eliminarProducto(id);
+    }
 }

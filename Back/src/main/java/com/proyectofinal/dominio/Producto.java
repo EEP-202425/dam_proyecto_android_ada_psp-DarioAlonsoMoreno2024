@@ -14,13 +14,15 @@ public class Producto {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 
-	private int precio;
-	private String nombre;
+	private String nombre; // <-- ahora String
+	private double precio;
 	private int year;
 
 	@ManyToOne
-	@JoinColumn(name = "user_id", nullable = false) // Asegúrate de que este campo no sea nulo
+	@JoinColumn(name = "user_id", nullable = false)
 	private Usuario usuario;
+
+	// Getters / setters
 
 	public long getId() {
 		return id;
@@ -28,14 +30,6 @@ public class Producto {
 
 	public void setId(long id) {
 		this.id = id;
-	}
-
-	public int getPrecio() {
-		return precio;
-	}
-
-	public void setPrecio(int precio) {
-		this.precio = precio;
 	}
 
 	public String getNombre() {
@@ -46,6 +40,14 @@ public class Producto {
 		this.nombre = nombre;
 	}
 
+	public double getPrecio() {
+		return precio;
+	}
+
+	public void setPrecio(double precio) {
+		this.precio = precio;
+	}
+
 	public int getYear() {
 		return year;
 	}
@@ -54,5 +56,11 @@ public class Producto {
 		this.year = year;
 	}
 
+	public Usuario getUsuario() {
+		return usuario;
+	}
 
+	public void setUsuario(Usuario usuario) {
+		this.usuario = usuario;
+	}
 }

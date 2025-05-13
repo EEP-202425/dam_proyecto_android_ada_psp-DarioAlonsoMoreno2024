@@ -16,6 +16,10 @@ public class Pedido {
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
+    
+    @ManyToOne
+    @JoinColumn(name = "producto_id")
+    private Producto producto;
 
     public Pedido() {
     	}
@@ -43,6 +47,16 @@ public class Pedido {
 	public void setUsuario(Usuario usuario) {
 		this.usuario = usuario;
 	}
+
+	public Producto getProducto() {
+		return producto;
+	}
+
+	public void setProducto(Producto producto) {
+		this.producto = producto;
+	}
+	
+	
     
     
     }
