@@ -16,8 +16,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.repuestosalonso.data.RepuestosRepository
 import com.repuestosalonso.data.Repository
+import com.repuestosalonso.ui.login.AddRepuestoScreen
 import com.repuestosalonso.ui.login.LoginScreen
-import com.repuestosalonso.ui.ProductsScreen
+import com.repuestosalonso.ui.login.ProductsScreen
 import com.repuestosalonso.ui.theme.RepuestosAlonsoTheme
 import com.repuestosalonso.viewmodel.RepuestosViewModel
 import com.repuestosalonso.viewmodel.RepuestosViewModelFactory
@@ -42,43 +43,60 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color    = MaterialTheme.colorScheme.background
                 ) {
-                    // Crear NavController
                     val navController: NavHostController = rememberNavController()
 
                     NavHost(
-                        navController    = navController,
+                        navController = navController,
                         startDestination = "login"
                     ) {
-
-
                         composable("login") {
                             LoginScreen(
                                 viewModel = userVM,
-                                onLoginSuccess = { token ->
-                                    navController.navigate("products/$token") {
-                                        // Aquí quitamos el inclusive = true
-                                        popUpTo("login") { inclusive = false }
+                                onLoginSuccess = { token, userId ->
+                                    navController.navigate("products/$token/$userId") {
+                                        popUpTo("login") { inclusive = true }
                                     }
                                 }
                             )
                         }
 
-
-                        // Pantalla de productos
+                        // Pantalla de listado de productos
                         composable(
-                            route = "products/{token}",
-                            arguments = listOf(navArgument("token") {
-                                type = NavType.StringType
-                            })
-                        ) { backStackEntry ->
-                            val token = backStackEntry.arguments?.getString("token") ?: ""
-                            // Inicia la carga de repuestos
+                            route = "products/{token}/{userId}",
+                            arguments = listOf(
+                                navArgument("token")  { type = NavType.StringType },
+                                navArgument("userId") { type = NavType.LongType }
+                            )
+                        ) { backStack ->
+                            val token  = backStack.arguments!!.getString("token")!!
+                            val userId = backStack.arguments!!.getLong("userId")
                             repVM.loadRepuestos(token)
-                            // Llama a ProductsScreen con el token, el ViewModel y el NavController
                             ProductsScreen(
                                 token         = token,
+                                userId        = userId,
                                 viewModel     = repVM,
                                 navController = navController
+                            )
+                        }
+
+                        // Pantalla de añadir repuesto
+                        composable(
+                            route = "addRepuesto/{token}/{userId}",
+                            arguments = listOf(
+                                navArgument("token")  { type = NavType.StringType },
+                                navArgument("userId") { type = NavType.LongType }
+                            )
+                        ) { backStack ->
+                            val token  = backStack.arguments!!.getString("token")!!
+                            val userId = backStack.arguments!!.getLong("userId")
+                            AddRepuestoScreen(
+                                token           = token,
+                                userId          = userId,
+                                viewModel       = repVM,
+                                onRepuestoAdded = {
+                                    repVM.loadRepuestos(token)
+                                    navController.popBackStack()
+                                }
                             )
                         }
                     }
