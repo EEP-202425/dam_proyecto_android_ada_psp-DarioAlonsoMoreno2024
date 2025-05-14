@@ -3,7 +3,6 @@ package com.repuestosalonso.network
 import com.repuestosalonso.model.LoginRequest
 import com.repuestosalonso.model.LoginResponse
 import com.repuestosalonso.model.NewRepuestoRequest
-import com.repuestosalonso.model.Pedido
 import com.repuestosalonso.model.PedidoRequest
 import com.repuestosalonso.model.PedidoResponse
 import com.repuestosalonso.model.Repuesto
@@ -14,17 +13,10 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface ApiService {
-
-    // Listar todos los usuarios (si lo necesitas)
-    @GET("api/usuarios")
-    suspend fun getUsers(): Response<List<Usuario>>
-
-    // Crear usuario
-    @POST("api/usuarios/registro")
-    suspend fun crearUsuario(@Body usuario: Usuario): Response<Usuario>
 
     // Login
     @POST("api/usuarios/login")
@@ -54,4 +46,20 @@ interface ApiService {
         @Header("Authorization") bearerToken: String,
         @Path("id") id: Long
     ): Response<Unit>
+
+    @PUT("api/producto/{id}")
+    suspend fun updateRepuesto(
+        @Header("Authorization") bearer: String,
+        @Path("id") id: Long,
+        @Body request: NewRepuestoRequest
+    ): Response<Repuesto>
+
+    // Listar todos los usuarios (si lo necesitas)
+//    @GET("api/usuarios")
+//    suspend fun getUsers(): Response<List<Usuario>>
+
+    // Crear usuario
+//    @POST("api/usuarios/registro")
+//    suspend fun crearUsuario(@Body usuario: Usuario): Response<Usuario>
+
 }

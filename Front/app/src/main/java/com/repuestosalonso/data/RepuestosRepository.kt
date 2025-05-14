@@ -26,15 +26,16 @@ class RepuestosRepository {
         count: Int
     ): Response<PedidoResponse> {
         val request = PedidoRequest(
-            userId =  userId,
+            userId = userId,
             productId = productId,
-            count  = count
+            count = count
         )
 
         Log.d("ORDER-REQ", "REQUEST JSON: $request")
 
-      return api.crearPedido("Bearer $token", request)
+        return api.crearPedido("Bearer $token", request)
     }
+
     suspend fun addRepuesto(
         token: String,
         userId: Long,
@@ -46,4 +47,18 @@ class RepuestosRepository {
         return api.crearRepuesto("Bearer $token", request)
     }
 
+    suspend
+    fun updateRepuesto(
+        token: String,
+        userId: Long,
+        productId: Long,
+        nombre: String,
+        precio: Double,
+        year: Int
+    ): Response<Repuesto> {
+        val request = NewRepuestoRequest(nombre, precio, year, userId)
+        return api.updateRepuesto("Bearer $token", productId, request)
+    }
 }
+
+

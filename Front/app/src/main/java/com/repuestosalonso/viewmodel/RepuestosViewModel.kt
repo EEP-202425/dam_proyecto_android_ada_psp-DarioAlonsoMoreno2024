@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.repuestosalonso.data.RepuestosRepository
 import com.repuestosalonso.model.Repuesto
-import com.repuestosalonso.model.PedidoResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -17,17 +16,29 @@ class RepuestosViewModel(
     private val _repuestos = MutableStateFlow<List<Repuesto>>(emptyList())
     val repuestos: StateFlow<List<Repuesto>> = _repuestos
 
-    /** Carga inicial o recarga de repuestos */
+
     fun loadRepuestos(token: String) {
         viewModelScope.launch {
-            val response: Response<List<Repuesto>> = repository.fetchRepuestos(token)
-            if (response.isSuccessful) response.body()?.let { lista ->
-                _repuestos.value = lista
+            val resp = repository.fetchRepuestos(token)
+            if (resp.isSuccessful) {
+                resp.body()?.let { lista ->
+                    _repuestos.value = lista
+                }
             }
         }
     }
 
-    /** Crear un nuevo repuesto y añadirlo a la lista */
+
+    /** Eliminar un repuesto tanto de la BD como de la lista local */
+    fun deleteProduct(token: String, productId: Long) {
+        viewModelScope.launch {
+            val resp = repository.deleteProduct(token, productId)
+            if (resp.isSuccessful) {
+                _repuestos.value = _repuestos.value.filterNot { it.id == productId }
+            }
+        }
+    }
+
     suspend fun createRepuesto(
         token: String,
         userId: Long,
@@ -35,30 +46,32 @@ class RepuestosViewModel(
         precio: Double,
         year: Int
     ): Response<Repuesto> {
-        val response = repository.addRepuesto(token, userId, nombre, precio, year)
-        if (response.isSuccessful) response.body()?.let { nuevo ->
-            val updated = _repuestos.value.toMutableList().apply { add(0, nuevo) }
-            _repuestos.value = updated
+        val resp = repository.addRepuesto(token, userId, nombre, precio, year)
+        if (resp.isSuccessful) {
+            resp.body()?.let { nuevo ->
+                _repuestos.value = listOf(nuevo) + _repuestos.value
+            }
         }
-        return response
+        return resp
     }
 
-    /** Crear un pedido de repuesto */
-    suspend fun createOrder(
+    /** Actualizar un repuesto existente */
+    fun updateRepuesto(
         token: String,
         userId: Long,
         productId: Long,
-        cantidad: Int
-    ): Response<PedidoResponse> {
-        return repository.makeOrder(token, userId, productId, cantidad)
-    }
-
-    fun deleteProduct(token: String, productId: Long) {
+        nombre: String,
+        precio: Double,
+        year: Int
+    ) {
         viewModelScope.launch {
-            val resp = repository.deleteProduct(token, productId)
+            val resp = repository.updateRepuesto(token, userId, productId, nombre, precio, year)
             if (resp.isSuccessful) {
-                // Filtramos la lista local para quitar el borrado
-                _repuestos.value = _repuestos.value.filterNot { it.id == productId }
+                resp.body()?.let { actualizado ->
+                    _repuestos.value = _repuestos.value.map {
+                        if (it.id == productId) actualizado else it
+                    }
+                }
             }
         }
     }

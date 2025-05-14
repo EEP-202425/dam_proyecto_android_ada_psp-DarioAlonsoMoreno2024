@@ -1,4 +1,3 @@
-// src/main/java/com/repuestosalonso/ui/login/AddRepuestoScreen.kt
 package com.repuestosalonso.ui.login
 
 import androidx.activity.ComponentActivity
@@ -74,16 +73,20 @@ fun AddRepuestoScreen(
             Button(
                 onClick = {
                     val precio = precioText.toDoubleOrNull()
-                    val year   = yearText.toIntOrNull()
-                    scope.launch {
-                        if (precio != null && year != null && nombre.isNotBlank()) {
+                    val year = yearText.toIntOrNull()
+                    if (precio != null && year != null && nombre.isNotBlank()) {
+                        scope.launch {
+                            // llamamos a la versión suspend y capturamos su Response
                             val resp = viewModel.createRepuesto(token, userId, nombre, precio, year)
                             if (resp.isSuccessful) {
                                 onRepuestoAdded()
                             } else {
                                 snackbarHostState.showSnackbar("Error al guardar: ${resp.code()}")
                             }
-                        } else {
+                        }
+                    } else {
+                        // También aquí dentro porque showSnackbar es suspend
+                        scope.launch {
                             snackbarHostState.showSnackbar("Rellena todos los campos")
                         }
                     }
@@ -95,7 +98,7 @@ fun AddRepuestoScreen(
             ) {
                 Text("Guardar")
             }
-
         }
     }
 }
+

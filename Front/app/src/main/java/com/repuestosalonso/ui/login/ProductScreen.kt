@@ -3,14 +3,17 @@ package com.repuestosalonso.ui.login
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.repuestosalonso.model.Repuesto
@@ -24,10 +27,15 @@ fun ProductsScreen(
     viewModel: RepuestosViewModel,
     navController: NavHostController
 ) {
-    // Observa la lista de repuestos
-    val repuestos by viewModel.repuestos.collectAsState(initial = emptyList())
-    val snackbarHostState = remember { SnackbarHostState() }
+    val repuestos by viewModel.repuestos.collectAsState(emptyList())
+    val snackbarHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    // Estado para control de diálogo de edición
+    var editing by remember { mutableStateOf<Repuesto?>(null) }
+    var nombre by remember { mutableStateOf("") }
+    var precioText by remember { mutableStateOf("") }
+    var yearText by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -35,10 +43,7 @@ fun ProductsScreen(
                 title = { Text("Repuestos") },
                 actions = {
                     IconButton(onClick = { viewModel.loadRepuestos(token) }) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refrescar lista"
-                        )
+                        Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
                     }
                 }
             )
@@ -47,19 +52,19 @@ fun ProductsScreen(
             FloatingActionButton(onClick = {
                 navController.navigate("addRepuesto/$token/$userId")
             }) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir repuesto")
+                Icon(Icons.Default.Add, contentDescription = "Añadir")
             }
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHost) }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier
+            Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(repuestos) { repuesto ->
+            items(repuestos) { rep ->
                 Card(Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(4.dp)) {
                     Row(
                         Modifier
@@ -67,39 +72,91 @@ fun ProductsScreen(
                             .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Modelo: ${repuesto.model}", style = MaterialTheme.typography.titleMedium)
-                            Text("Precio: ${repuesto.precio}", style = MaterialTheme.typography.bodyMedium)
-                            Text("Año: ${repuesto.year}", style = MaterialTheme.typography.bodySmall)
-                            Spacer(Modifier.height(8.dp))
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        val resp = viewModel.createOrder(token, userId, repuesto.id, 1)
-                                        val msg = if (resp.isSuccessful) "Pedido enviado" else "Error al pedir"
-                                        snackbarHostState.showSnackbar(msg)
-                                    }
-                                },
-                                Modifier.fillMaxWidth()
-                            ) {
-                                Text("Pedir")
-                            }
+                        Column(Modifier.weight(1f)) {
+                            Text("Modelo: ${rep.model}", style = MaterialTheme.typography.titleMedium)
+                            Text("Precio: ${rep.precio}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Año: ${rep.year}", style = MaterialTheme.typography.bodySmall)
+                        }
+                        IconButton(onClick = {
+                            // Abrir diálogo con valores iniciales
+                            editing = rep
+                            nombre = rep.model
+                            precioText = rep.precio.toString()
+                            yearText = rep.year.toString()
+                        }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar")
                         }
                         IconButton(onClick = {
                             scope.launch {
-                                viewModel.deleteProduct(token, repuesto.id)
-                                snackbarHostState.showSnackbar("Repuesto eliminado")
+                                viewModel.deleteProduct(token, rep.id)
+                                snackbarHost.showSnackbar("Repuesto eliminado")
                             }
                         }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Borrar",
-                                tint = MaterialTheme.colorScheme.error
-                            )
+                            Icon(Icons.Default.Delete, contentDescription = "Borrar")
                         }
                     }
                 }
             }
+        }
+
+        // Diálogo de edición
+        editing?.let { repuesto ->
+            AlertDialog(
+                onDismissRequest = { editing = null },
+                title = { Text("Editar Repuesto") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = nombre,
+                            onValueChange = { nombre = it },
+                            label = { Text("Modelo") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = precioText,
+                            onValueChange = { precioText = it },
+                            label = { Text("Precio") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = yearText,
+                            onValueChange = { yearText = it },
+                            label = { Text("Año") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val precio = precioText.toDoubleOrNull()
+                        val year   = yearText.toIntOrNull()
+                        if (nombre.isNotBlank() && precio != null && year != null) {
+                            scope.launch {
+                                // Aquí sí usamos updateRepuesto
+                                viewModel.updateRepuesto(
+                                    token, userId, repuesto.id,
+                                    nombre, precio, year
+                                )
+                                snackbarHost.showSnackbar("Repuesto actualizado")
+                                editing = null
+                            }
+                        } else {
+                            scope.launch {
+                                snackbarHost.showSnackbar("Rellena todos los campos")
+                            }
+                        }
+                    }) {
+                        Text("Guardar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { editing = null }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }
