@@ -1,6 +1,9 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/O1oNnYGo)
 
 
+![image](https://github.com/user-attachments/assets/19e9d882-eefd-4bca-85b7-47b77b9d8a7f)
+
+
 1.- VIDEO =>
 
 https://eepmad-my.sharepoint.com/:v:/g/personal/dario-alonso1_eep-igroup_com/ETzDSt8BGmpOrU1hxsuyMikBGoAdEkidpbz1ksHpG6BjBw?e=ajQlJ2&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D
