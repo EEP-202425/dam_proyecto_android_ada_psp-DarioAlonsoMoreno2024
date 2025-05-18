@@ -6,7 +6,6 @@ import com.repuestosalonso.model.NewRepuestoRequest
 import com.repuestosalonso.model.PedidoRequest
 import com.repuestosalonso.model.PedidoResponse
 import com.repuestosalonso.model.Repuesto
-import com.repuestosalonso.model.Usuario
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -53,13 +52,5 @@ interface ApiService {
         @Path("id") id: Long,
         @Body request: NewRepuestoRequest
     ): Response<Repuesto>
-
-    // Listar todos los usuarios (si lo necesitas)
-//    @GET("api/usuarios")
-//    suspend fun getUsers(): Response<List<Usuario>>
-
-    // Crear usuario
-//    @POST("api/usuarios/registro")
-//    suspend fun crearUsuario(@Body usuario: Usuario): Response<Usuario>
 
 }

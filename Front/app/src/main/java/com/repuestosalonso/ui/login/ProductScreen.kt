@@ -1,14 +1,13 @@
 package com.repuestosalonso.ui.login
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,56 +42,106 @@ fun ProductsScreen(
                 title = { Text("Repuestos") },
                 actions = {
                     IconButton(onClick = { viewModel.loadRepuestos(token) }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refrescar",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                navController.navigate("addRepuesto/$token/$userId")
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir")
+            FloatingActionButton(
+                onClick = { navController.navigate("addRepuesto/$token/$userId") },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Añadir", tint = MaterialTheme.colorScheme.onPrimary)
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHost) }
+        snackbarHost = { SnackbarHost(hostState = snackbarHost) }
     ) { padding ->
         LazyColumn(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(repuestos) { rep ->
-                Card(Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(4.dp)) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Modelo: ${rep.model}", style = MaterialTheme.typography.titleMedium)
-                            Text("Precio: ${rep.precio}", style = MaterialTheme.typography.bodyMedium)
-                            Text("Año: ${rep.year}", style = MaterialTheme.typography.bodySmall)
-                        }
-                        IconButton(onClick = {
-                            // Abrir diálogo con valores iniciales
-                            editing = rep
-                            nombre = rep.model
-                            precioText = rep.precio.toString()
-                            yearText = rep.year.toString()
-                        }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar")
-                        }
-                        IconButton(onClick = {
-                            scope.launch {
-                                viewModel.deleteProduct(token, rep.id)
-                                snackbarHost.showSnackbar("Repuesto eliminado")
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = "Modelo: ${rep.model}",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Precio: ${rep.precio}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Año: ${rep.year}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
-                        }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Borrar")
+                            IconButton(onClick = {
+                                editing = rep
+                                nombre = rep.model
+                                precioText = rep.precio.toString()
+                                yearText = rep.year.toString()
+                            }) {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Editar",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            IconButton(onClick = {
+                                scope.launch {
+                                    viewModel.deleteProduct(token, rep.id)
+                                    snackbarHost.showSnackbar("Repuesto eliminado")
+                                }
+                            }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Borrar",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    val resp = viewModel.createOrder(token, userId, rep.id, 1)
+                                    val msg = if (resp.isSuccessful) "Pedido enviado" else "Error al pedir"
+                                    snackbarHost.showSnackbar(msg)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Pedir")
                         }
                     }
                 }
@@ -131,10 +180,9 @@ fun ProductsScreen(
                 confirmButton = {
                     TextButton(onClick = {
                         val precio = precioText.toDoubleOrNull()
-                        val year   = yearText.toIntOrNull()
+                        val year = yearText.toIntOrNull()
                         if (nombre.isNotBlank() && precio != null && year != null) {
                             scope.launch {
-                                // Aquí sí usamos updateRepuesto
                                 viewModel.updateRepuesto(
                                     token, userId, repuesto.id,
                                     nombre, precio, year

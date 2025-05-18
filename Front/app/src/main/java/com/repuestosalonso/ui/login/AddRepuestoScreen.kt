@@ -1,6 +1,5 @@
 package com.repuestosalonso.ui.login
 
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions

@@ -6,3 +6,5 @@ data class Usuario(
     val email: String,
     val telefono: String?
 )
+
+// PARA FUTURAS INTEGRACIONES

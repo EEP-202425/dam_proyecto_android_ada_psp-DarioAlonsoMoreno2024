@@ -10,3 +10,5 @@ data class Pedido(
     val items: List<ItemPedido> = emptyList(),
     val total: Double = 0.0
 )
+
+// PARA FUTURAS INTEGRACIONES

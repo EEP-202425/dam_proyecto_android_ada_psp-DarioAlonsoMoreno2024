@@ -7,9 +7,4 @@ data class LoginResponse(
     @SerializedName("userId") val userId: Long,
 )
 
-//    val success: Boolean,
-//    val message: String,
-//    val token: String?,
-//    val usuario: Usuario?
-
 

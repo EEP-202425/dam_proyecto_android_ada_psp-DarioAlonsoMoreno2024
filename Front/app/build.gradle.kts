@@ -1,8 +1,6 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
- //   id("org.jetbrains.kotlin.plugin.compose")
- //   id("org.jetbrains.kotlin.plugin.compose") version "1.5.0" apply false
 }
 
 android {
@@ -58,8 +56,6 @@ android {
 }
 dependencies {
 
- //   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
-
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
@@ -82,8 +78,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:${rootProject.extra["lifecycle_version"]}")
     implementation("androidx.navigation:navigation-compose:2.7.4")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
-
-
 
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     debugImplementation("androidx.compose.ui:ui-tooling")

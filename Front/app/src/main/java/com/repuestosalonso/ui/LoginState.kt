@@ -8,3 +8,6 @@ sealed class LoginState {
     data class Success(val userData: LoginResponse?) : LoginState()
     data class Error(val message: String) : LoginState()
 }
+
+
+// PARA FUTURAS INTEGRACIONES

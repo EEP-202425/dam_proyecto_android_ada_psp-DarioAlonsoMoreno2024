@@ -24,11 +24,9 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inicializamos el Repository y la Factory de UserViewModel
         val repository = Repository()
         val factory = UserViewModelFactory(repository)
 
-        // Obtenemos UserViewModel usando la factory
         val userViewModel: UserViewModel by viewModels { factory }
 
 

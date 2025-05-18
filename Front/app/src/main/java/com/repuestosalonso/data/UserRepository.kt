@@ -10,3 +10,6 @@ class UserRepository(private val api: ApiService) {
         return api.login(LoginRequest(email, password))
     }
 }
+
+
+// PARA FUTUTRAS INTEGRACIONES

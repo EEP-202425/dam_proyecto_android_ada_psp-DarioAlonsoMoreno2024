@@ -3,6 +3,7 @@ package com.repuestosalonso.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.repuestosalonso.data.RepuestosRepository
+import com.repuestosalonso.model.PedidoResponse
 import com.repuestosalonso.model.Repuesto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,6 +55,16 @@ class RepuestosViewModel(
         }
         return resp
     }
+
+    suspend fun createOrder(
+        token: String,
+        userId: Long,
+        productId: Long,
+        count: Int
+    ): Response<PedidoResponse> {
+        return repository.makeOrder(token, userId, productId, count)
+    }
+
 
     /** Actualizar un repuesto existente */
     fun updateRepuesto(
