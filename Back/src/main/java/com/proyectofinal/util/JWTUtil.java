@@ -38,11 +38,16 @@ public class JWTUtil {
         return extractAllClaims(token).getSubject();
     }
 
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
-    }
+//    private Claims extractAllClaims(String token) {
+//        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+//    }
 
     private boolean isTokenExpired(String token) {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
+
+private Claims extractAllClaims(String token) {
+	// TODO Auto-generated method stub
+	return null;
+}
 }

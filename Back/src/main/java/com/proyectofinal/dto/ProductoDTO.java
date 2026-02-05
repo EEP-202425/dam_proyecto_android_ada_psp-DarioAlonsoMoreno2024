@@ -2,9 +2,9 @@ package com.proyectofinal.dto;
 
 public class ProductoDTO {
 	private Long id;
-	private Long userId; // coincidirá con @SerializedName("userId") en Android
+	private Long userId; 
 	private double precio;
-	private String nombre; // coincide con @SerializedName("nombre")→model en Android
+	private String nombre; 
 	private int year;
 
 	public ProductoDTO() {

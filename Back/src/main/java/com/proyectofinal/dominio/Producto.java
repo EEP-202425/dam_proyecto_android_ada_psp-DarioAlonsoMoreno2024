@@ -14,7 +14,7 @@ public class Producto {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 
-	private String nombre; // <-- ahora String
+	private String nombre; 
 	private double precio;
 	private int year;
 	
