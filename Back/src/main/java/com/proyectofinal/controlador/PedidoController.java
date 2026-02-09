@@ -24,40 +24,25 @@ public class PedidoController {
         return pedidoService.obtenerTodos();
     }
 
-    @PostMapping("/crear")
-    public ResponseEntity<?> crearPedido(
-            @RequestParam Long usuarioId,
-            @RequestParam Long productoId,
-            @RequestParam int cantidad) {
-        try {
-            Pedido pedido = pedidoService.crearPedido(usuarioId, productoId, cantidad);
-            return ResponseEntity.ok(pedido);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-    
     @PostMapping
-    public ResponseEntity<PedidoResponse> crearPedido(
-            @RequestBody PedidoRequest request
-    ) {
-        // Llamas a tu servicio con los tres parámetros:
+    public ResponseEntity<PedidoResponse> crearPedido(@RequestBody PedidoRequest request) {
+
+        int cantidad = (request.getCantidad() != null) ? request.getCantidad() : 1;
+
         Pedido nuevo = pedidoService.crearPedido(
-            request.getUsuarioId(),
-            request.getProductoId(),
-            request.getCantidad()
+                request.getUsuarioId(),
+                request.getProductoId(),
+                cantidad
         );
 
-        // Mapea tu entidad a DTO de salida
         PedidoResponse resp = new PedidoResponse(
-            nuevo.getId(),
-            nuevo.getFecha(),
-            nuevo.getUsuario().getId(),    // o nuevo.getUsuarioId() si usas IDs
-            nuevo.getProducto().getId()   // o nuevo.getProductoId()
+                nuevo.getId(),
+                nuevo.getFecha(),
+                nuevo.getUsuario().getId(),
+                nuevo.getProducto().getId(),
+                nuevo.getCantidad()
         );
 
-        return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .body(resp);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 }

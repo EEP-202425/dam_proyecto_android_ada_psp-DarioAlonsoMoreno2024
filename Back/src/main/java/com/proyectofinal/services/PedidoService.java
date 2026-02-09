@@ -3,7 +3,6 @@ package com.proyectofinal.services;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.proyectofinal.dao.PedidoRepository;
@@ -16,35 +15,48 @@ import com.proyectofinal.dominio.Usuario;
 @Service
 public class PedidoService {
 
-	@Autowired
-	private PedidoRepository pedidoRepository;
-	
-	 @Autowired
-	 private ProductRepository productoRepo;
+    private final PedidoRepository pedidoRepository;
+    private final ProductRepository productoRepo;
+    private final UsuarioRepository usuarioRepo;
 
-	@Autowired
-	private UsuarioRepository usuarioRepository;
-	
-	@Autowired
-	private InventarioService inventarioService;
-	
-	@Autowired
-	private UsuarioRepository usuarioRepo;
+    public PedidoService(PedidoRepository pedidoRepository,
+                         ProductRepository productoRepo,
+                         UsuarioRepository usuarioRepo) {
+        this.pedidoRepository = pedidoRepository;
+        this.productoRepo = productoRepo;
+        this.usuarioRepo = usuarioRepo;
+    }
 
-	public List<Pedido> obtenerTodos() {
-		return pedidoRepository.findAll();
-	}
+    public List<Pedido> obtenerTodos() {
+        return pedidoRepository.findAll();
+    }
 
-	  public Pedido crearPedido(Long usuarioId, Long productoId, int cantidad) {
-		    Usuario u  = usuarioRepo.findById(usuarioId)
-		                  .orElseThrow(() -> new RuntimeException("Usuario no existe"));
-		    Producto p = productoRepo.findById(productoId)
-		                  .orElseThrow(() -> new RuntimeException("Producto no existe"));
+    public Pedido crearPedido(Long usuarioId, Long productoId, int cantidad) {
 
-		    Pedido pedido = new Pedido();
-		    pedido.setUsuario(u);
-		    pedido.setProducto(p);
-		    pedido.setFecha(LocalDate.now());
-		    return pedidoRepository.save(pedido);
-		  }
-		}
+        if (usuarioId == null) {
+            throw new RuntimeException("usuarioId es obligatorio");
+        }
+        if (productoId == null) {
+            throw new RuntimeException("productoId es obligatorio");
+        }
+        if (cantidad <= 0) {
+            throw new RuntimeException("cantidad debe ser mayor que 0");
+        }
+
+        Usuario u = usuarioRepo.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no existe"));
+
+        Producto p = productoRepo.findById(productoId)
+                .orElseThrow(() -> new RuntimeException("Producto no existe"));
+
+        Pedido pedido = new Pedido();
+        pedido.setUsuario(u);
+        pedido.setProducto(p);
+        pedido.setFecha(LocalDate.now());
+
+        // Si tu entidad Pedido tiene el campo cantidad, descomenta esta línea:
+        // pedido.setCantidad(cantidad);
+
+        return pedidoRepository.save(pedido);
+    }
+}

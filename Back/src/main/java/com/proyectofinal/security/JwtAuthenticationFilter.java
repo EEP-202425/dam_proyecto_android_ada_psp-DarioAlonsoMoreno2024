@@ -48,6 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             // Token inválido -> no autenticamos
             filterChain.doFilter(request, response);
+            System.out.println("[JWT] Token invalido: " + e.getClass().getSimpleName());
             return;
         }
 
