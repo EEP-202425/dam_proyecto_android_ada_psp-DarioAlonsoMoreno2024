@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.proyectofinal.dominio.Pedido;
+import com.proyectofinal.dto.ConfirmPedidoResponse;
 import com.proyectofinal.dto.PedidoRequest;
 import com.proyectofinal.dto.PedidoResponse;
 import com.proyectofinal.services.PedidoService;
@@ -16,33 +17,32 @@ import java.util.List;
 @RequestMapping("/api/pedidos")
 public class PedidoController {
 
-    @Autowired
-    private PedidoService pedidoService;
+	@Autowired
+	private PedidoService pedidoService;
 
-    @GetMapping
-    public List<Pedido> obtenerTodos() {
-        return pedidoService.obtenerTodos();
-    }
+	@GetMapping
+	public List<Pedido> obtenerTodos() {
+		return pedidoService.obtenerTodos();
+	}
 
-    @PostMapping
-    public ResponseEntity<PedidoResponse> crearPedido(@RequestBody PedidoRequest request) {
+	// Mantengo el POST individual por si lo usas aún.
+	@PostMapping
+	public ResponseEntity<PedidoResponse> crearPedido(@RequestBody PedidoRequest request) {
 
-        int cantidad = (request.getCantidad() != null) ? request.getCantidad() : 1;
+		int cantidad = (request.getCantidad() != null) ? request.getCantidad() : 1;
 
-        Pedido nuevo = pedidoService.crearPedido(
-                request.getUsuarioId(),
-                request.getProductoId(),
-                cantidad
-        );
+		Pedido nuevo = pedidoService.crearPedido(request.getUsuarioId(), request.getProductoId(), cantidad);
 
-        PedidoResponse resp = new PedidoResponse(
-                nuevo.getId(),
-                nuevo.getFecha(),
-                nuevo.getUsuario().getId(),
-                nuevo.getProducto().getId(),
-                nuevo.getCantidad()
-        );
+		PedidoResponse resp = new PedidoResponse(nuevo.getId(), nuevo.getFecha(), nuevo.getUsuario().getId(),
+				nuevo.getProducto().getId(), nuevo.getCantidad());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
-    }
+		return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+	}
+
+	// NUEVO: confirmar pedido desde el carrito del usuario autenticado (JWT)
+	@PostMapping("/confirmar")
+	public ResponseEntity<ConfirmPedidoResponse> confirmarDesdeCarrito() {
+		ConfirmPedidoResponse resp = pedidoService.confirmarPedidoDesdeCarrito();
+		return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+	}
 }

@@ -1,24 +1,29 @@
 package com.proyectofinal.dto;
 
 public class ProductoDTO {
+
 	private Long id;
-	private Long userId; 
+	private Long userId;
 	private double precio;
-	private String nombre; 
+	private String nombre;
 	private int year;
+
+	private String marca;
+	private int stock;
 
 	public ProductoDTO() {
 	}
 
-	public ProductoDTO(Long id, Long userId, double precio, String nombre, int year) {
+	public ProductoDTO(Long id, Long userId, double precio, String nombre, int year, String marca, int stock) {
 		this.id = id;
 		this.userId = userId;
 		this.precio = precio;
 		this.nombre = nombre;
 		this.year = year;
+		this.marca = marca;
+		this.stock = stock;
 	}
 
-	// Getters y setters
 	public Long getId() {
 		return id;
 	}
@@ -57,5 +62,21 @@ public class ProductoDTO {
 
 	public void setYear(int year) {
 		this.year = year;
+	}
+
+	public String getMarca() {
+		return marca;
+	}
+
+	public void setMarca(String marca) {
+		this.marca = marca;
+	}
+
+	public int getStock() {
+		return stock;
+	}
+
+	public void setStock(int stock) {
+		this.stock = stock;
 	}
 }
