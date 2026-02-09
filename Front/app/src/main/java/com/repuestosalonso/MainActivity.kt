@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.repuestosalonso.data.RepuestosRepository
 import com.repuestosalonso.data.Repository
+import com.repuestosalonso.network.TokenManager
 import com.repuestosalonso.ui.login.AddRepuestoScreen
 import com.repuestosalonso.ui.login.LoginScreen
 import com.repuestosalonso.ui.login.ProductsScreen
@@ -29,11 +30,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Instancia los repositorios
         val userRepo = Repository()
         val repRepo  = RepuestosRepository()
 
-        // Crea factories y ViewModels
         val userVM: UserViewModel by viewModels { UserViewModelFactory(userRepo) }
         val repVM: RepuestosViewModel by viewModels { RepuestosViewModelFactory(repRepo) }
 
@@ -53,48 +52,45 @@ class MainActivity : ComponentActivity() {
                             LoginScreen(
                                 viewModel = userVM,
                                 onLoginSuccess = { token, userId ->
-                                    navController.navigate("products/$token/$userId") {
+                                    // Guardamos token y dejamos de pasarlo por la URL
+                                    TokenManager.saveToken(this@MainActivity, token)
+
+                                    navController.navigate("products/$userId") {
                                         popUpTo("login") { inclusive = true }
                                     }
                                 }
                             )
                         }
 
-                        // Pantalla de listado de productos
+                        // Productos (SIN token en ruta)
                         composable(
-                            route = "products/{token}/{userId}",
+                            route = "products/{userId}",
                             arguments = listOf(
-                                navArgument("token")  { type = NavType.StringType },
                                 navArgument("userId") { type = NavType.LongType }
                             )
                         ) { backStack ->
-                            val token  = backStack.arguments!!.getString("token")!!
                             val userId = backStack.arguments!!.getLong("userId")
-                            repVM.loadRepuestos(token)
+
                             ProductsScreen(
-                                token         = token,
                                 userId        = userId,
                                 viewModel     = repVM,
                                 navController = navController
                             )
                         }
 
-                        // Pantalla de añadir repuesto
+                        // Añadir repuesto (SIN token en ruta)
                         composable(
-                            route = "addRepuesto/{token}/{userId}",
+                            route = "addRepuesto/{userId}",
                             arguments = listOf(
-                                navArgument("token")  { type = NavType.StringType },
                                 navArgument("userId") { type = NavType.LongType }
                             )
                         ) { backStack ->
-                            val token  = backStack.arguments!!.getString("token")!!
                             val userId = backStack.arguments!!.getLong("userId")
+
                             AddRepuestoScreen(
-                                token           = token,
                                 userId          = userId,
                                 viewModel       = repVM,
                                 onRepuestoAdded = {
-                                    repVM.loadRepuestos(token)
                                     navController.popBackStack()
                                 }
                             )

@@ -12,25 +12,37 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.repuestosalonso.model.Repuesto
+import com.repuestosalonso.network.TokenManager
 import com.repuestosalonso.viewmodel.RepuestosViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun ProductsScreen(
-    token: String,
     userId: Long,
     viewModel: RepuestosViewModel,
     navController: NavHostController
 ) {
+    val context = LocalContext.current
+    val token = TokenManager.getToken(context) ?: ""
+
     val repuestos by viewModel.repuestos.collectAsState(emptyList())
     val snackbarHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Estado para control de diálogo de edición
+    // Cargar al entrar (solo 1 vez)
+    LaunchedEffect(Unit) {
+        if (token.isNotBlank()) {
+            viewModel.loadRepuestos(token)
+        } else {
+            snackbarHost.showSnackbar("No hay token guardado. Vuelve a login.")
+        }
+    }
+
     var editing by remember { mutableStateOf<Repuesto?>(null) }
     var nombre by remember { mutableStateOf("") }
     var precioText by remember { mutableStateOf("") }
@@ -41,26 +53,24 @@ fun ProductsScreen(
             TopAppBar(
                 title = { Text("Repuestos") },
                 actions = {
-                    IconButton(onClick = { viewModel.loadRepuestos(token) }) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Refrescar",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    IconButton(onClick = {
+                        if (token.isNotBlank()) viewModel.loadRepuestos(token)
+                    }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("addRepuesto/$token/$userId") },
-                containerColor = MaterialTheme.colorScheme.primary
+                onClick = { navController.navigate("addRepuesto/$userId") }
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.Default.Add, contentDescription = "Añadir")
             }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHost) }
     ) { padding ->
+
         LazyColumn(
             Modifier
                 .fillMaxSize()
@@ -73,9 +83,6 @@ fun ProductsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .animateContentSize(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    ),
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
@@ -100,29 +107,27 @@ fun ProductsScreen(
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
+
                             IconButton(onClick = {
                                 editing = rep
                                 nombre = rep.model
                                 precioText = rep.precio.toString()
                                 yearText = rep.year.toString()
                             }) {
-                                Icon(
-                                    Icons.Default.Edit,
-                                    contentDescription = "Editar",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
+                                Icon(Icons.Default.Edit, contentDescription = "Editar")
                             }
+
                             IconButton(onClick = {
                                 scope.launch {
-                                    viewModel.deleteProduct(token, rep.id)
-                                    snackbarHost.showSnackbar("Repuesto eliminado")
+                                    if (token.isBlank()) {
+                                        snackbarHost.showSnackbar("No hay token guardado.")
+                                    } else {
+                                        viewModel.deleteProduct(token, rep.id)
+                                        snackbarHost.showSnackbar("Repuesto eliminado")
+                                    }
                                 }
                             }) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "Borrar",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
+                                Icon(Icons.Default.Delete, contentDescription = "Borrar")
                             }
                         }
 
@@ -131,14 +136,15 @@ fun ProductsScreen(
                         Button(
                             onClick = {
                                 scope.launch {
+                                    if (token.isBlank()) {
+                                        snackbarHost.showSnackbar("No hay token guardado.")
+                                        return@launch
+                                    }
                                     val resp = viewModel.createOrder(token, userId, rep.id, 1)
-                                    val msg = if (resp.isSuccessful) "Pedido enviado" else "Error al pedir"
+                                    val msg = if (resp.isSuccessful) "Pedido enviado" else "Error al pedir (${resp.code()})"
                                     snackbarHost.showSnackbar(msg)
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary
-                            ),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Pedir")
@@ -183,6 +189,10 @@ fun ProductsScreen(
                         val year = yearText.toIntOrNull()
                         if (nombre.isNotBlank() && precio != null && year != null) {
                             scope.launch {
+                                if (token.isBlank()) {
+                                    snackbarHost.showSnackbar("No hay token guardado.")
+                                    return@launch
+                                }
                                 viewModel.updateRepuesto(
                                     token, userId, repuesto.id,
                                     nombre, precio, year
@@ -191,9 +201,7 @@ fun ProductsScreen(
                                 editing = null
                             }
                         } else {
-                            scope.launch {
-                                snackbarHost.showSnackbar("Rellena todos los campos")
-                            }
+                            scope.launch { snackbarHost.showSnackbar("Rellena todos los campos") }
                         }
                     }) {
                         Text("Guardar")

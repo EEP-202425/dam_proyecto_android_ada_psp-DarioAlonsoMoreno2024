@@ -1,5 +1,6 @@
 package com.repuestosalonso.network
 
+import android.content.Context
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -12,12 +13,22 @@ object RetrofitClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    private val client = OkHttpClient.Builder()
-        .addInterceptor(logging)
-        .build()
+    @Volatile
+    private var api: ApiService? = null
 
-    val apiService: ApiService by lazy {
-        Retrofit.Builder()
+    fun getApiService(context: Context): ApiService {
+        return api ?: synchronized(this) {
+            api ?: buildApi(context.applicationContext).also { api = it }
+        }
+    }
+
+    private fun buildApi(context: Context): ApiService {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(context))
+            .addInterceptor(logging)
+            .build()
+
+        return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
