@@ -18,6 +18,7 @@ import com.proyectofinal.dominio.Pedido;
 import com.proyectofinal.dominio.Producto;
 import com.proyectofinal.dominio.Usuario;
 import com.proyectofinal.dto.ConfirmPedidoResponse;
+import com.proyectofinal.dto.PedidoResumenDTO;
 import com.proyectofinal.dto.PedidoResponse;
 
 @Service
@@ -70,13 +71,6 @@ public class PedidoService {
 		return pedidoRepository.save(pedido);
 	}
 
-	/**
-	 * Confirma el pedido desde el carrito del usuario autenticado: - valida stock
-	 * para todos los items - descuenta stock - crea pedidos (uno por item del
-	 * carrito, según el modelo actual) - vacía carrito
-	 *
-	 * Transaccional: si algo falla, no se guarda nada.
-	 */
 	@Transactional
 	public ConfirmPedidoResponse confirmarPedidoDesdeCarrito() {
 
@@ -87,22 +81,18 @@ public class PedidoService {
 			throw new RuntimeException("El carrito está vacío");
 		}
 
-		// 1) Validación de stock (antes de tocar nada)
+		// Validación de stock previa
 		for (CarritoItem ci : items) {
-			Producto p = ci.getProducto();
+			Producto fresh = productoRepo.findById(ci.getProducto().getId())
+					.orElseThrow(() -> new RuntimeException("Producto no existe: " + ci.getProducto().getId()));
+
 			int cantidad = ci.getCantidad();
-
-			// Recargar producto por seguridad (evitas estados raros)
-			Producto fresh = productoRepo.findById(p.getId())
-					.orElseThrow(() -> new RuntimeException("Producto no existe: " + p.getId()));
-
 			if (fresh.getStock() < cantidad) {
 				throw new RuntimeException("Stock insuficiente para el producto " + fresh.getId() + ". Stock="
 						+ fresh.getStock() + ", solicitado=" + cantidad);
 			}
 		}
 
-		// 2) Descontar stock + crear pedidos
 		double total = 0.0;
 		List<PedidoResponse> pedidosCreados = new ArrayList<>();
 
@@ -129,10 +119,42 @@ public class PedidoService {
 					saved.getProducto().getId(), saved.getCantidad()));
 		}
 
-		// 3) Vaciar carrito
 		carritoRepo.deleteByUsuario_Id(u.getId());
 
-		return new ConfirmPedidoResponse(pedidosCreados, total, items.size());
+		String orderNumber = java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+		return new ConfirmPedidoResponse(orderNumber, pedidosCreados, total, items.size());
+	}
+
+	// NUEVO: Mis pedidos con info del producto
+	public List<PedidoResumenDTO> misPedidosResumen() {
+		Usuario u = currentUser();
+
+		return pedidoRepository.findByUsuario_IdOrderByIdDesc(u.getId()).stream().map(p -> {
+			Producto prod = p.getProducto();
+			double subtotal = prod.getPrecio() * p.getCantidad();
+			return new PedidoResumenDTO(p.getId(), p.getFecha(), u.getId(), prod.getId(), prod.getNombre(),
+					prod.getMarca(), prod.getPrecio(), p.getCantidad(), subtotal);
+		}).toList();
+	}
+
+	// NUEVO: Detalle de un pedido mío con info del producto
+	public PedidoResumenDTO detalleMiPedidoResumen(Long pedidoId) {
+		if (pedidoId == null)
+			throw new RuntimeException("pedidoId es obligatorio");
+
+		Usuario u = currentUser();
+
+		Pedido p = pedidoRepository.findById(pedidoId).orElseThrow(() -> new RuntimeException("Pedido no existe"));
+
+		if (!p.getUsuario().getId().equals(u.getId())) {
+			throw new RuntimeException("No puedes ver un pedido que no es tuyo");
+		}
+
+		Producto prod = p.getProducto();
+		double subtotal = prod.getPrecio() * p.getCantidad();
+
+		return new PedidoResumenDTO(p.getId(), p.getFecha(), u.getId(), prod.getId(), prod.getNombre(), prod.getMarca(),
+				prod.getPrecio(), p.getCantidad(), subtotal);
 	}
 
 	private Usuario currentUser() {

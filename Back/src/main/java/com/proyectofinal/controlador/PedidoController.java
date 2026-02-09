@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import com.proyectofinal.dominio.Pedido;
 import com.proyectofinal.dto.ConfirmPedidoResponse;
 import com.proyectofinal.dto.PedidoRequest;
+import com.proyectofinal.dto.PedidoResumenDTO;
 import com.proyectofinal.dto.PedidoResponse;
 import com.proyectofinal.services.PedidoService;
 
@@ -25,7 +26,7 @@ public class PedidoController {
 		return pedidoService.obtenerTodos();
 	}
 
-	// Mantengo el POST individual por si lo usas aún.
+	// Mantengo el POST individual por compatibilidad
 	@PostMapping
 	public ResponseEntity<PedidoResponse> crearPedido(@RequestBody PedidoRequest request) {
 
@@ -39,10 +40,20 @@ public class PedidoController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(resp);
 	}
 
-	// NUEVO: confirmar pedido desde el carrito del usuario autenticado (JWT)
 	@PostMapping("/confirmar")
 	public ResponseEntity<ConfirmPedidoResponse> confirmarDesdeCarrito() {
 		ConfirmPedidoResponse resp = pedidoService.confirmarPedidoDesdeCarrito();
 		return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+	}
+
+	// AHORA: mis pedidos "listos para Android"
+	@GetMapping("/mis")
+	public List<PedidoResumenDTO> misPedidos() {
+		return pedidoService.misPedidosResumen();
+	}
+
+	@GetMapping("/mis/{pedidoId}")
+	public PedidoResumenDTO detalleMiPedido(@PathVariable Long pedidoId) {
+		return pedidoService.detalleMiPedidoResumen(pedidoId);
 	}
 }
