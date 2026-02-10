@@ -7,17 +7,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.repuestosalonso.model.Repuesto
-import com.repuestosalonso.network.TokenManager
 import com.repuestosalonso.viewmodel.RepuestosViewModel
 import kotlinx.coroutines.launch
 
@@ -27,35 +28,30 @@ fun ProductsScreen(
     viewModel: RepuestosViewModel,
     navController: NavHostController
 ) {
-    val context = LocalContext.current
-    val token = TokenManager.getToken(context) ?: ""
-
     val repuestos by viewModel.repuestos.collectAsState(emptyList())
     val snackbarHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Cargar al entrar (solo 1 vez)
+    // Cargar lista al entrar (1 vez)
     LaunchedEffect(Unit) {
-        if (token.isNotBlank()) {
-            viewModel.loadRepuestos(token)
-        } else {
-            snackbarHost.showSnackbar("No hay token guardado. Vuelve a login.")
-        }
+        viewModel.loadRepuestos()
     }
 
+    // Estado para diálogo de edición
     var editing by remember { mutableStateOf<Repuesto?>(null) }
+
     var nombre by remember { mutableStateOf("") }
     var precioText by remember { mutableStateOf("") }
     var yearText by remember { mutableStateOf("") }
+    var marca by remember { mutableStateOf("") }
+    var stockText by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Repuestos") },
                 actions = {
-                    IconButton(onClick = {
-                        if (token.isNotBlank()) viewModel.loadRepuestos(token)
-                    }) {
+                    IconButton(onClick = { viewModel.loadRepuestos() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
                     }
                 }
@@ -72,7 +68,7 @@ fun ProductsScreen(
     ) { padding ->
 
         LazyColumn(
-            Modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
@@ -88,13 +84,18 @@ fun ProductsScreen(
                 ) {
                     Column(Modifier.padding(12.dp)) {
                         Row(
-                            Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(
-                                    text = "Modelo: ${rep.model}",
+                                    text = "Nombre: ${rep.nombre}",
                                     style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Marca: ${rep.marca}",
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Text(
@@ -106,25 +107,28 @@ fun ProductsScreen(
                                     text = "Año: ${rep.year}",
                                     style = MaterialTheme.typography.bodySmall
                                 )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Stock: ${rep.stock}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
 
                             IconButton(onClick = {
                                 editing = rep
-                                nombre = rep.model
+                                nombre = rep.nombre
                                 precioText = rep.precio.toString()
                                 yearText = rep.year.toString()
+                                marca = rep.marca
+                                stockText = rep.stock.toString()
                             }) {
                                 Icon(Icons.Default.Edit, contentDescription = "Editar")
                             }
 
                             IconButton(onClick = {
                                 scope.launch {
-                                    if (token.isBlank()) {
-                                        snackbarHost.showSnackbar("No hay token guardado.")
-                                    } else {
-                                        viewModel.deleteProduct(token, rep.id)
-                                        snackbarHost.showSnackbar("Repuesto eliminado")
-                                    }
+                                    viewModel.deleteProduct(rep.id)
+                                    snackbarHost.showSnackbar("Repuesto eliminado")
                                 }
                             }) {
                                 Icon(Icons.Default.Delete, contentDescription = "Borrar")
@@ -136,12 +140,12 @@ fun ProductsScreen(
                         Button(
                             onClick = {
                                 scope.launch {
-                                    if (token.isBlank()) {
-                                        snackbarHost.showSnackbar("No hay token guardado.")
-                                        return@launch
+                                    val resp = viewModel.createOrder(userId, rep.id, 1)
+                                    val msg = if (resp.isSuccessful) {
+                                        "Pedido enviado"
+                                    } else {
+                                        "Error al pedir (${resp.code()})"
                                     }
-                                    val resp = viewModel.createOrder(token, userId, rep.id, 1)
-                                    val msg = if (resp.isSuccessful) "Pedido enviado" else "Error al pedir (${resp.code()})"
                                     snackbarHost.showSnackbar(msg)
                                 }
                             },
@@ -154,7 +158,7 @@ fun ProductsScreen(
             }
         }
 
-        // Diálogo de edición
+        // Diálogo de edición (IMPORTANTE: envía marca y stock)
         editing?.let { repuesto ->
             AlertDialog(
                 onDismissRequest = { editing = null },
@@ -164,7 +168,13 @@ fun ProductsScreen(
                         OutlinedTextField(
                             value = nombre,
                             onValueChange = { nombre = it },
-                            label = { Text("Modelo") },
+                            label = { Text("Nombre") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = marca,
+                            onValueChange = { marca = it },
+                            label = { Text("Marca") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         OutlinedTextField(
@@ -181,24 +191,36 @@ fun ProductsScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
+                        OutlinedTextField(
+                            value = stockText,
+                            onValueChange = { stockText = it },
+                            label = { Text("Stock") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 },
                 confirmButton = {
                     TextButton(onClick = {
                         val precio = precioText.toDoubleOrNull()
                         val year = yearText.toIntOrNull()
-                        if (nombre.isNotBlank() && precio != null && year != null) {
+                        val stock = stockText.toIntOrNull()
+
+                        if (nombre.isNotBlank() && marca.isNotBlank() && precio != null && year != null && stock != null) {
                             scope.launch {
-                                if (token.isBlank()) {
-                                    snackbarHost.showSnackbar("No hay token guardado.")
-                                    return@launch
-                                }
                                 viewModel.updateRepuesto(
-                                    token, userId, repuesto.id,
-                                    nombre, precio, year
+                                    userId = userId,
+                                    productId = repuesto.id,
+                                    nombre = nombre,
+                                    precio = precio,
+                                    year = year,
+                                    marca = marca,
+                                    stock = stock
                                 )
                                 snackbarHost.showSnackbar("Repuesto actualizado")
                                 editing = null
+                                // refresco por si backend devuelve algo distinto
+                                viewModel.loadRepuestos()
                             }
                         } else {
                             scope.launch { snackbarHost.showSnackbar("Rellena todos los campos") }

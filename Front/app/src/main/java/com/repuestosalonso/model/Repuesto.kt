@@ -1,11 +1,12 @@
 package com.repuestosalonso.model
 
-import com.google.gson.annotations.SerializedName
-
 data class Repuesto(
-    @SerializedName("id")    val id: Long,
-    @SerializedName("userId")val userId: Long,    // si el JSON usa userId
-    @SerializedName("precio")val precio: Double,
-    @SerializedName("nombre") val model: String,
-    @SerializedName("year")  val year: Int
+    val id: Long,
+    val userId: Long,
+    val precio: Double,
+    val nombre: String,
+    val year: Int,
+    val marca: String,
+    val stock: Int
 )
+

@@ -17,23 +17,18 @@ class RepuestosViewModel(
     private val _repuestos = MutableStateFlow<List<Repuesto>>(emptyList())
     val repuestos: StateFlow<List<Repuesto>> = _repuestos
 
-
-    fun loadRepuestos(token: String) {
+    fun loadRepuestos() {
         viewModelScope.launch {
-            val resp = repository.fetchRepuestos(token)
+            val resp = repository.fetchRepuestos()
             if (resp.isSuccessful) {
-                resp.body()?.let { lista ->
-                    _repuestos.value = lista
-                }
+                _repuestos.value = resp.body().orEmpty()
             }
         }
     }
 
-
-    /** Eliminar un repuesto tanto de la BD como de la lista local */
-    fun deleteProduct(token: String, productId: Long) {
+    fun deleteProduct(productId: Long) {
         viewModelScope.launch {
-            val resp = repository.deleteProduct(token, productId)
+            val resp = repository.deleteProduct(productId)
             if (resp.isSuccessful) {
                 _repuestos.value = _repuestos.value.filterNot { it.id == productId }
             }
@@ -41,13 +36,14 @@ class RepuestosViewModel(
     }
 
     suspend fun createRepuesto(
-        token: String,
         userId: Long,
         nombre: String,
         precio: Double,
-        year: Int
+        year: Int,
+        marca: String,
+        stock: Int
     ): Response<Repuesto> {
-        val resp = repository.addRepuesto(token, userId, nombre, precio, year)
+        val resp = repository.addRepuesto(userId, nombre, precio, year, marca, stock)
         if (resp.isSuccessful) {
             resp.body()?.let { nuevo ->
                 _repuestos.value = listOf(nuevo) + _repuestos.value
@@ -57,31 +53,27 @@ class RepuestosViewModel(
     }
 
     suspend fun createOrder(
-        token: String,
         userId: Long,
         productId: Long,
         count: Int
     ): Response<PedidoResponse> {
-        return repository.makeOrder(token, userId, productId, count)
+        return repository.makeOrder(userId, productId, count)
     }
 
-
-    /** Actualizar un repuesto existente */
     fun updateRepuesto(
-        token: String,
         userId: Long,
         productId: Long,
         nombre: String,
         precio: Double,
-        year: Int
+        year: Int,
+        marca: String,
+        stock: Int
     ) {
         viewModelScope.launch {
-            val resp = repository.updateRepuesto(token, userId, productId, nombre, precio, year)
+            val resp = repository.updateRepuesto(userId, productId, nombre, precio, year, marca, stock)
             if (resp.isSuccessful) {
                 resp.body()?.let { actualizado ->
-                    _repuestos.value = _repuestos.value.map {
-                        if (it.id == productId) actualizado else it
-                    }
+                    _repuestos.value = _repuestos.value.map { if (it.id == productId) actualizado else it }
                 }
             }
         }

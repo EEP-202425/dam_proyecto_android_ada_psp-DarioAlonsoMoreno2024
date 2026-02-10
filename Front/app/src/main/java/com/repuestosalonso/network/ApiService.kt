@@ -1,60 +1,39 @@
 package com.repuestosalonso.network
 
-import com.repuestosalonso.model.*
+import com.repuestosalonso.model.LoginRequest
+import com.repuestosalonso.model.LoginResponse
+import com.repuestosalonso.model.NewRepuestoRequest
+import com.repuestosalonso.model.PedidoRequest
+import com.repuestosalonso.model.PedidoResponse
+import com.repuestosalonso.model.Repuesto
 import retrofit2.Response
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 
 interface ApiService {
 
-    // PUBLICO
     @POST("api/usuarios/login")
     suspend fun login(@Body loginRequest: LoginRequest): Response<LoginResponse>
-
-    // PROTEGIDO
-    @GET("api/usuarios/me")
-    suspend fun me(): Response<UserMeResponse>
 
     @GET("api/producto")
     suspend fun getRepuestos(): Response<List<Repuesto>>
 
+    @POST("api/pedidos/crear")
+    suspend fun crearPedido(@Body pedido: PedidoRequest): Response<PedidoResponse>
+
     @POST("api/producto")
     suspend fun crearRepuesto(@Body request: NewRepuestoRequest): Response<Repuesto>
+
+    @DELETE("api/producto/{id}")
+    suspend fun deleteProduct(@Path("id") id: Long): Response<Unit>
 
     @PUT("api/producto/{id}")
     suspend fun updateRepuesto(
         @Path("id") id: Long,
         @Body request: NewRepuestoRequest
     ): Response<Repuesto>
-
-    @DELETE("api/producto/{id}")
-    suspend fun deleteProduct(@Path("id") id: Long): Response<Unit>
-
-    // CARRITO
-    @GET("api/carrito")
-    suspend fun getCarrito(): Response<CarritoResponse>
-
-    @POST("api/carrito/items")
-    suspend fun addCarritoItem(@Body request: CarritoAddRequest): Response<CarritoResponse>
-
-    @PUT("api/carrito/items/{itemId}")
-    suspend fun updateCarritoItem(
-        @Path("itemId") itemId: Long,
-        @Body request: CarritoUpdateRequest
-    ): Response<CarritoResponse>
-
-    @DELETE("api/carrito/items/{itemId}")
-    suspend fun deleteCarritoItem(@Path("itemId") itemId: Long): Response<CarritoResponse>
-
-    @DELETE("api/carrito")
-    suspend fun vaciarCarrito(): Response<Unit>
-
-    // PEDIDOS
-    @POST("api/pedidos/confirmar")
-    suspend fun confirmarPedido(): Response<ConfirmPedidoResponse>
-
-    @GET("api/pedidos/mis")
-    suspend fun misPedidos(): Response<List<PedidoResumen>>
-
-    @GET("api/pedidos/mis/{pedidoId}")
-    suspend fun detalleMiPedido(@Path("pedidoId") pedidoId: Long): Response<PedidoResumen>
 }

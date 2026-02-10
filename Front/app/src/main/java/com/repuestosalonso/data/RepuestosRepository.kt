@@ -1,5 +1,6 @@
 package com.repuestosalonso.data
 
+import android.content.Context
 import android.util.Log
 import com.repuestosalonso.model.NewRepuestoRequest
 import com.repuestosalonso.model.PedidoRequest
@@ -8,57 +9,65 @@ import com.repuestosalonso.model.Repuesto
 import com.repuestosalonso.network.RetrofitClient
 import retrofit2.Response
 
-class RepuestosRepository {
-    private val api = RetrofitClient.apiService
+class RepuestosRepository(
+    private val context: Context
+) {
+    private val api = RetrofitClient.apiService(context)
 
-    suspend fun fetchRepuestos(token: String): Response<List<Repuesto>> {
-        return api.getRepuestos("Bearer $token")
+    suspend fun fetchRepuestos(): Response<List<Repuesto>> {
+        return api.getRepuestos()
     }
 
-    suspend fun deleteProduct(token: String, productId: Long): Response<Unit> {
-        return api.deleteProduct("Bearer $token", productId)
+    suspend fun deleteProduct(productId: Long): Response<Unit> {
+        return api.deleteProduct(productId)
     }
 
     suspend fun makeOrder(
-        token: String,
         userId: Long,
         productId: Long,
         count: Int
     ): Response<PedidoResponse> {
-        val request = PedidoRequest(
-            userId = userId,
-            productId = productId,
-            count = count
-        )
-
+        val request = PedidoRequest(userId = userId, productId = productId, count = count)
         Log.d("ORDER-REQ", "REQUEST JSON: $request")
-
-        return api.crearPedido("Bearer $token", request)
+        return api.crearPedido(request)
     }
 
     suspend fun addRepuesto(
-        token: String,
         userId: Long,
         nombre: String,
         precio: Double,
-        year: Int
+        year: Int,
+        marca: String,
+        stock: Int
     ): Response<Repuesto> {
-        val request = NewRepuestoRequest(nombre, precio, year, userId)
-        return api.crearRepuesto("Bearer $token", request)
+        val request = NewRepuestoRequest(
+            nombre = nombre,
+            precio = precio,
+            year = year,
+            usuarioId = userId,
+            marca = marca,
+            stock = stock
+        )
+        return api.crearRepuesto(request)
     }
 
-    suspend
-    fun updateRepuesto(
-        token: String,
+    suspend fun updateRepuesto(
         userId: Long,
         productId: Long,
         nombre: String,
         precio: Double,
-        year: Int
+        year: Int,
+        marca: String,
+        stock: Int
     ): Response<Repuesto> {
-        val request = NewRepuestoRequest(nombre, precio, year, userId)
-        return api.updateRepuesto("Bearer $token", productId, request)
+        val request = NewRepuestoRequest(
+            nombre = nombre,
+            precio = precio,
+            year = year,
+            usuarioId = userId,
+            marca = marca,
+            stock = stock
+        )
+        return api.updateRepuesto(productId, request)
     }
 }
-
-

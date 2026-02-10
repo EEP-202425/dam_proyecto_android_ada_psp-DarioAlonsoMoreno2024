@@ -30,8 +30,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val userRepo = Repository()
-        val repRepo  = RepuestosRepository()
+        val userRepo = Repository(applicationContext)
+        val repRepo  = RepuestosRepository(applicationContext)
 
         val userVM: UserViewModel by viewModels { UserViewModelFactory(userRepo) }
         val repVM: RepuestosViewModel by viewModels { RepuestosViewModelFactory(repRepo) }

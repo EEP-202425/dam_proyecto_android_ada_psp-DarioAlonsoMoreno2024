@@ -8,10 +8,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.repuestosalonso.network.TokenManager
 import com.repuestosalonso.viewmodel.RepuestosViewModel
 import kotlinx.coroutines.launch
 
@@ -21,14 +19,13 @@ fun AddRepuestoScreen(
     viewModel: RepuestosViewModel,
     onRepuestoAdded: () -> Unit
 ) {
-    val context = LocalContext.current
-    val token = TokenManager.getToken(context) ?: ""
-
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     var nombre by remember { mutableStateOf("") }
     var precioText by remember { mutableStateOf("") }
     var yearText by remember { mutableStateOf("") }
+    var marca by remember { mutableStateOf("") }
+    var stockText by remember { mutableStateOf("") }
 
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -58,7 +55,14 @@ fun AddRepuestoScreen(
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                label = { Text("Modelo") },
+                label = { Text("Nombre") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = marca,
+                onValueChange = { marca = it },
+                label = { Text("Marca") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -78,24 +82,27 @@ fun AddRepuestoScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            OutlinedTextField(
+                value = stockText,
+                onValueChange = { stockText = it },
+                label = { Text("Stock") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Spacer(Modifier.weight(1f))
 
             Button(
                 onClick = {
                     val precio = precioText.toDoubleOrNull()
                     val year = yearText.toIntOrNull()
+                    val stock = stockText.toIntOrNull()
 
-                    if (precio != null && year != null && nombre.isNotBlank()) {
+                    if (precio != null && year != null && stock != null && nombre.isNotBlank() && marca.isNotBlank()) {
                         scope.launch {
-                            if (token.isBlank()) {
-                                snackbarHostState.showSnackbar("No hay token guardado. Vuelve a login.")
-                                return@launch
-                            }
-
-                            val resp = viewModel.createRepuesto(token, userId, nombre, precio, year)
+                            val resp = viewModel.createRepuesto(userId, nombre, precio, year, marca, stock)
                             if (resp.isSuccessful) {
-                                // refrescar listado al volver
-                                viewModel.loadRepuestos(token)
+                                viewModel.loadRepuestos()
                                 onRepuestoAdded()
                             } else {
                                 snackbarHostState.showSnackbar("Error al guardar: ${resp.code()}")
@@ -106,8 +113,10 @@ fun AddRepuestoScreen(
                     }
                 },
                 enabled = nombre.isNotBlank()
+                        && marca.isNotBlank()
                         && precioText.toDoubleOrNull() != null
-                        && yearText.toIntOrNull() != null,
+                        && yearText.toIntOrNull() != null
+                        && stockText.toIntOrNull() != null,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Guardar")

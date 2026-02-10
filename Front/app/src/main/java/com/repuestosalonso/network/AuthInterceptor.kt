@@ -11,7 +11,6 @@ class AuthInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
 
-        // Endpoints públicos (sin token)
         val path = original.url.encodedPath
         val isPublic =
             path.endsWith("/api/usuarios/login") ||
@@ -22,13 +21,16 @@ class AuthInterceptor(
         }
 
         val token = TokenManager.getToken(context)
-        val requestWithAuth = if (!token.isNullOrBlank()) {
-            original.newBuilder()
-                .addHeader("Authorization", "Bearer $token")
-                .build()
-        } else {
-            original
+
+        // Si no hay token, no inventamos cabecera
+        if (token.isNullOrBlank()) {
+            return chain.proceed(original)
         }
+
+        // IMPORTANTE: header() REEMPLAZA, evita duplicados
+        val requestWithAuth = original.newBuilder()
+            .header("Authorization", "Bearer $token")
+            .build()
 
         return chain.proceed(requestWithAuth)
     }
